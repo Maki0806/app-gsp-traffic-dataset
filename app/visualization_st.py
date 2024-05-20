@@ -7,6 +7,7 @@ from utils import (
     get_file_names_from_paths,
     get_graph_variables,
     draw_graph_signals,
+    show_empty_fig,
 )
 import streamlit as st
 
@@ -42,8 +43,14 @@ class AppVisGSP:
             self._use_gs_fpath = self._gs_fpaths[use_ind]
 
     def main_functions(self):
+        st.write(f"Selcted Graph Signal: {self._selected_gs_data}")
         if self._use_gs_fpath:
             gs_variables = get_graph_variables(self._use_gs_fpath)
             draw_graph_signals(
                 G=gs_variables.G, pos=gs_variables.pos, data=gs_variables.data[:, 0]
             )
+        else:
+            st.warning(
+                "Please load the data of graph signals in the sidebar.", icon="⚠️"
+            )
+            show_empty_fig()

@@ -5,5 +5,6 @@ from .utils import (
     get_file_names_from_paths,
     get_graph_variables,
     draw_graph_signals,
+    show_empty_fig,
 )
 from .gs_variables import GraphVariables

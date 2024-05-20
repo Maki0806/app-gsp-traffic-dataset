@@ -72,8 +72,8 @@ def _make_graphD(G: np.ndarray, edges: List) -> nx.DiGraph | nx.Graph:
 def _st_graph_pyplot(
     graphD: nx.DiGraph | nx.Graph, data: np.ndarray, position_dict: dict
 ) -> None:
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
     if data is not None:
         mean_data = sum(data) / len(data)
         node_sizes = [20 * float(signal / mean_data) for signal in data]
@@ -93,3 +93,11 @@ def _st_graph_pyplot(
         nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
     nx.draw_networkx_edges(G=graphD, pos=position_dict, width=0.2)
     st.pyplot(fig=fig)
+
+
+def show_empty_fig():
+    zero_array = np.zeros((100, 2))
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.scatter(x=zero_array[:, 0], y=zero_array[:, 1])
+    st.pyplot(fig=fig, use_container_width=True)
