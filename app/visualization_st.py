@@ -5,6 +5,8 @@ from utils import (
     top_dir,
     get_paths_of_target_suffix,
     get_file_names_from_paths,
+    get_graph_variables,
+    draw_graph_signals,
 )
 import streamlit as st
 
@@ -40,4 +42,8 @@ class AppVisGSP:
             self._use_gs_fpath = self._gs_fpaths[use_ind]
 
     def main_functions(self):
-        pass
+        if self._use_gs_fpath:
+            gs_variables = get_graph_variables(self._use_gs_fpath)
+            draw_graph_signals(
+                G=gs_variables.G, pos=gs_variables.pos, data=gs_variables.data[:, 0]
+            )
