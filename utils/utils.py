@@ -92,7 +92,7 @@ def _st_graph_pyplot(
     else:
         nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
     nx.draw_networkx_edges(G=graphD, pos=position_dict, width=0.2)
-    st.pyplot(fig=fig)
+    st.pyplot(fig=fig, use_container_width=True)
 
 
 def show_empty_fig():
