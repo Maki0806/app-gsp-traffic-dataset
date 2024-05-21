@@ -43,13 +43,13 @@ class AppVisGSP:
 
     def main_functions(self):
         st.write(f"Selcted Graph Signal: {self._selected_gs_data}")
+        selected_time, gs_variables = None, None
+        max_time = 1
         slider_disabled = self._use_gs_fpath is None
         if slider_disabled:
             st.warning(
                 "Please load the data of graph signals in the sidebar.", icon="⚠️"
             )
-            _ = self._select_gs_time(slider_disabled=slider_disabled)
-            show_empty_fig()
         else:
             if (
                 variables.prev_use_gs_fpath
@@ -60,14 +60,17 @@ class AppVisGSP:
                 gs_variables = get_graph_variables(self._use_gs_fpath)
                 variables.prev_use_gs_fpath = self._use_gs_fpath
                 variables.gs_variables = gs_variables
-            selected_time = self._select_gs_time(
-                slider_disabled=slider_disabled, max_value=gs_variables.max_time
-            )
-            draw_graph_signals(
-                G=gs_variables.G,
-                pos=gs_variables.pos,
-                data=gs_variables.data[:, selected_time],
-            )
+            max_time = gs_variables.max_time
+
+        selected_time = self._select_gs_time(
+            slider_disabled=slider_disabled, max_value=max_time
+        )
+
+        gs_draw_col, spectrum_draw_col = st.columns(2)
+        with gs_draw_col:
+            self.gs_draw_col_function(gs_variables, selected_time)
+        with spectrum_draw_col:
+            self.spectrum_draw_col_function()
 
     def _select_gs_time(self, slider_disabled, max_value=1):
         selected_time = st.slider(
@@ -78,3 +81,16 @@ class AppVisGSP:
             disabled=slider_disabled,
         )
         return selected_time
+
+    def gs_draw_col_function(self, gs_variables, selected_time):
+        if gs_variables and selected_time is not None:
+            draw_graph_signals(
+                G=gs_variables.G,
+                pos=gs_variables.pos,
+                data=gs_variables.data[:, selected_time],
+            )
+        else:
+            show_empty_fig()
+
+    def spectrum_draw_col_function(self):
+        show_empty_fig()
