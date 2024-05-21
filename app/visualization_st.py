@@ -7,6 +7,8 @@ from utils import (
     draw_graph_signals,
     show_empty_fig,
     variables,
+    apply_gft_to_signal,
+    show_spectrum,
 )
 import streamlit as st
 
@@ -70,7 +72,7 @@ class AppVisGSP:
         with gs_draw_col:
             self.gs_draw_col_function(gs_variables, selected_time)
         with spectrum_draw_col:
-            self.spectrum_draw_col_function()
+            self.spectrum_draw_col_function(gs_variables, selected_time)
 
     def _select_gs_time(self, slider_disabled, max_value=1):
         selected_time = st.slider(
@@ -92,5 +94,11 @@ class AppVisGSP:
         else:
             show_empty_fig()
 
-    def spectrum_draw_col_function(self):
-        show_empty_fig()
+    def spectrum_draw_col_function(self, gs_variables, selected_time):
+        if gs_variables and selected_time is not None:
+            hat_graph_signal = apply_gft_to_signal(
+                G=gs_variables.G, graph_signal=gs_variables.data[:, selected_time]
+            )
+            show_spectrum(hat_signal=hat_graph_signal)
+        else:
+            show_empty_fig()

@@ -6,6 +6,8 @@ from .utils import (
     get_graph_variables,
     draw_graph_signals,
     show_empty_fig,
+    apply_gft_to_signal,
+    show_spectrum,
 )
 from .gs_variables import GraphVariables
 from .session_state_variables import SessionVariables

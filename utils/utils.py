@@ -43,7 +43,10 @@ def get_graph_variables(use_gs_fpath: Path) -> Type[GraphVariables]:
 
 
 def draw_graph_signals(
-    G: np.ndarray, pos: np.ndarray, data: np.ndarray = None, save_image_name: str = None
+    G,
+    pos: np.ndarray,
+    data: np.ndarray = None,
+    save_image_name: str = None,
 ):
     position_dict = {
         node_num: (pos_x, pos_y) for node_num, (pos_x, pos_y) in enumerate(pos)
@@ -53,15 +56,15 @@ def draw_graph_signals(
     _st_graph_pyplot(graphD, data, position_dict)
 
 
-def _make_edge(G: np.ndarray) -> List:
+def _make_edge(G) -> List:
     W = find(G.W)
     edge_len = len(W[0])
     edges = [[int(W[0][i]), int(W[1][i])] for i in range(edge_len)]
     return edges
 
 
-def _make_graphD(G: np.ndarray, edges: List) -> nx.DiGraph | nx.Graph:
-    if G.is_directed:
+def _make_graphD(G, edges: List) -> nx.DiGraph | nx.Graph:
+    if G.is_directed():
         graphD = nx.DiGraph()
     else:
         graphD = nx.Graph()
@@ -74,7 +77,9 @@ def _st_graph_pyplot(
 ) -> None:
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(1, 1, 1)
-    if data is not None:
+    if data is None:
+        nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
+    else:
         mean_data = sum(data) / len(data)
         node_sizes = [20 * float(signal / mean_data) for signal in data]
         nx.draw_networkx_nodes(
@@ -89,8 +94,6 @@ def _st_graph_pyplot(
         )
         sm.set_array([0, max(data)])
         plt.colorbar(sm, ax=ax)
-    else:
-        nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
     nx.draw_networkx_edges(G=graphD, pos=position_dict, width=0.2)
     st.pyplot(fig=fig, use_container_width=True)
 
@@ -100,4 +103,18 @@ def show_empty_fig():
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(1, 1, 1)
     ax.scatter(x=zero_array[:, 0], y=zero_array[:, 1])
+    st.pyplot(fig=fig, use_container_width=True)
+
+
+def apply_gft_to_signal(G, graph_signal: np.ndarray):
+    G.compute_fourier_basis()
+    hat_graph_signal = G.gft(graph_signal)
+    return hat_graph_signal
+
+
+def show_spectrum(hat_signal: np.ndarray):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    signal_index = [i for i in range(len(hat_signal))]
+    ax.stem(signal_index, np.abs(hat_signal))
     st.pyplot(fig=fig, use_container_width=True)
