@@ -6,6 +6,7 @@ from utils import (
     get_graph_variables,
     draw_graph_signals,
     show_empty_fig,
+    variables,
 )
 import streamlit as st
 
@@ -50,10 +51,17 @@ class AppVisGSP:
             _ = self._select_gs_time(slider_disabled=slider_disabled)
             show_empty_fig()
         else:
-            gs_variables = get_graph_variables(self._use_gs_fpath)
-            max_time = gs_variables.data.shape[1]
+            if (
+                variables.prev_use_gs_fpath
+                and variables.prev_use_gs_fpath == self._use_gs_fpath
+            ):
+                gs_variables = variables.gs_variables
+            else:
+                gs_variables = get_graph_variables(self._use_gs_fpath)
+                variables.prev_use_gs_fpath = self._use_gs_fpath
+                variables.gs_variables = gs_variables
             selected_time = self._select_gs_time(
-                slider_disabled=slider_disabled, max_value=max_time
+                slider_disabled=slider_disabled, max_value=gs_variables.max_time
             )
             draw_graph_signals(
                 G=gs_variables.G,

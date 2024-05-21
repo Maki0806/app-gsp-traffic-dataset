@@ -12,6 +12,8 @@ class GraphVariables:
     data: np.ndarray
     pos: np.ndarray
     G: np.array = field(init=False)
+    max_time: int = field(init=False)
 
     def __post_init__(self):
         self.G = graphs.Graph(self.W)
+        self.max_time = self.data.shape[1] - 1

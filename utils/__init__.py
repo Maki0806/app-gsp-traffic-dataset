@@ -8,3 +8,6 @@ from .utils import (
     show_empty_fig,
 )
 from .gs_variables import GraphVariables
+from .session_state_variables import SessionVariables
+
+variables = SessionVariables()
