@@ -1,5 +1,3 @@
-import numpy as np
-from pygsp import graphs
 from utils import (
     init_page_st,
     top_dir,
@@ -8,6 +6,7 @@ from utils import (
     get_graph_variables,
     draw_graph_signals,
     show_empty_fig,
+    variables,
 )
 import streamlit as st
 
@@ -44,13 +43,38 @@ class AppVisGSP:
 
     def main_functions(self):
         st.write(f"Selcted Graph Signal: {self._selected_gs_data}")
-        if self._use_gs_fpath:
-            gs_variables = get_graph_variables(self._use_gs_fpath)
-            draw_graph_signals(
-                G=gs_variables.G, pos=gs_variables.pos, data=gs_variables.data[:, 0]
-            )
-        else:
+        slider_disabled = self._use_gs_fpath is None
+        if slider_disabled:
             st.warning(
                 "Please load the data of graph signals in the sidebar.", icon="⚠️"
             )
+            _ = self._select_gs_time(slider_disabled=slider_disabled)
             show_empty_fig()
+        else:
+            if (
+                variables.prev_use_gs_fpath
+                and variables.prev_use_gs_fpath == self._use_gs_fpath
+            ):
+                gs_variables = variables.gs_variables
+            else:
+                gs_variables = get_graph_variables(self._use_gs_fpath)
+                variables.prev_use_gs_fpath = self._use_gs_fpath
+                variables.gs_variables = gs_variables
+            selected_time = self._select_gs_time(
+                slider_disabled=slider_disabled, max_value=gs_variables.max_time
+            )
+            draw_graph_signals(
+                G=gs_variables.G,
+                pos=gs_variables.pos,
+                data=gs_variables.data[:, selected_time],
+            )
+
+    def _select_gs_time(self, slider_disabled, max_value=1):
+        selected_time = st.slider(
+            label="Select the time of graph signals: ",
+            min_value=0,
+            max_value=max_value,
+            step=1,
+            disabled=slider_disabled,
+        )
+        return selected_time
