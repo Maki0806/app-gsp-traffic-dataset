@@ -11,6 +11,7 @@ from utils import (
     show_spectrum,
 )
 import streamlit as st
+import numpy as np
 
 
 class AppVisGSP:
@@ -45,10 +46,28 @@ class AppVisGSP:
 
     def main_functions(self):
         st.write(f"Selcted Graph Signal: {self._selected_gs_data}")
-        selected_time, gs_variables = None, None
-        max_time = 1
+        self._gs_variables = None
+        selected_time = None
+        self._max_time = 1
         slider_disabled = self._use_gs_fpath is None
-        if slider_disabled:
+
+        self._load_graph_signal()
+        selected_time = self._select_gs_time(
+            slider_disabled=slider_disabled, max_value=self._max_time
+        )
+        noise_std = self._select_noise_std(slider_disabled=slider_disabled)
+        if not slider_disabled:
+            self._make_noise_signal(noise_std=noise_std)
+
+        gs_draw_col, gs_spectrum_draw_col = st.columns(2)
+        with gs_draw_col:
+            self._gs_draw_col_function(self._gs_variables, selected_time)
+        with gs_spectrum_draw_col:
+            self._gs_spectrum_draw_col_function(self._gs_variables, selected_time)
+
+    def _load_graph_signal(self):
+        gs_path_not_exists = self._use_gs_fpath is None
+        if gs_path_not_exists:
             st.warning(
                 "Please load the data of graph signals in the sidebar.", icon="⚠️"
             )
@@ -57,22 +76,12 @@ class AppVisGSP:
                 variables.prev_use_gs_fpath
                 and variables.prev_use_gs_fpath == self._use_gs_fpath
             ):
-                gs_variables = variables.gs_variables
+                self._gs_variables = variables.gs_variables
             else:
-                gs_variables = get_graph_variables(self._use_gs_fpath)
+                self._gs_variables = get_graph_variables(self._use_gs_fpath)
                 variables.prev_use_gs_fpath = self._use_gs_fpath
-                variables.gs_variables = gs_variables
-            max_time = gs_variables.max_time
-
-        selected_time = self._select_gs_time(
-            slider_disabled=slider_disabled, max_value=max_time
-        )
-
-        gs_draw_col, spectrum_draw_col = st.columns(2)
-        with gs_draw_col:
-            self.gs_draw_col_function(gs_variables, selected_time)
-        with spectrum_draw_col:
-            self.spectrum_draw_col_function(gs_variables, selected_time)
+                variables.gs_variables = self._gs_variables
+            self._max_time = self._gs_variables.max_time
 
     def _select_gs_time(self, slider_disabled, max_value=1):
         selected_time = st.slider(
@@ -81,23 +90,52 @@ class AppVisGSP:
             max_value=max_value,
             step=1,
             disabled=slider_disabled,
+            key="time_of_graph_signal",
         )
         return selected_time
 
-    def gs_draw_col_function(self, gs_variables, selected_time):
-        if gs_variables and selected_time is not None:
+    def _select_noise_std(self, slider_disabled):
+        noise_std = st.slider(
+            label="Select the noise standard variation: ",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            disabled=slider_disabled,
+            key="noise_std",
+        )
+        return noise_std
+
+    def _make_noise_signal(
+        self,
+        noise_std,
+    ):
+        noise_size = self._gs_variables.normalized_data.shape[0]
+        self._noise_signal = np.random.normal(loc=0, scale=noise_std, size=noise_size)
+
+    def _gs_draw_col_function(self, gs_variables, selected_time):
+        if gs_variables is not None and selected_time is not None:
+            noisy_data = (
+                self._gs_variables.normalized_data[:, selected_time]
+                + self._noise_signal
+            )
             draw_graph_signals(
                 G=gs_variables.G,
                 pos=gs_variables.pos,
                 data=gs_variables.data[:, selected_time],
+                normalized_data=noisy_data,
             )
         else:
             show_empty_fig()
 
-    def spectrum_draw_col_function(self, gs_variables, selected_time):
-        if gs_variables and selected_time is not None:
+    def _gs_spectrum_draw_col_function(self, gs_variables, selected_time):
+        if gs_variables is not None and selected_time is not None:
+            noisy_data = (
+                self._gs_variables.normalized_data[:, selected_time]
+                + self._noise_signal
+            )
             hat_graph_signal = apply_gft_to_signal(
-                G=gs_variables.G, graph_signal=gs_variables.data[:, selected_time]
+                G=gs_variables.G,
+                graph_signal=noisy_data,
             )
             show_spectrum(hat_signal=hat_graph_signal)
         else:
