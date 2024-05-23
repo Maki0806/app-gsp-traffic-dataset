@@ -43,17 +43,21 @@ def get_graph_variables(use_gs_fpath: Path) -> Type[GraphVariables]:
 
 
 def draw_graph_signals(
-    G,
+    G: any,
     pos: np.ndarray,
     data: np.ndarray = None,
+    normalized_data: np.array = None,
     save_image_name: str = None,
 ):
     position_dict = {
         node_num: (pos_x, pos_y) for node_num, (pos_x, pos_y) in enumerate(pos)
     }
+    if normalized_data is None:
+        normalized_data = data
+    node_sizes = _make_node_size(data)
     edges = _make_edge(G)
     graphD = _make_graphD(G=G, edges=edges)
-    _st_graph_pyplot(graphD, data, position_dict)
+    _st_graph_pyplot(graphD, normalized_data, node_sizes, position_dict)
 
 
 def _make_edge(G) -> List:
@@ -72,27 +76,35 @@ def _make_graphD(G, edges: List) -> nx.DiGraph | nx.Graph:
     return graphD
 
 
+def _make_node_size(data: np.ndarray) -> List[float]:
+    mean_data = sum(data) / len(data)
+    node_sizes = [20 * float(signal / mean_data) for signal in data]
+    return node_sizes
+
+
 def _st_graph_pyplot(
-    graphD: nx.DiGraph | nx.Graph, data: np.ndarray, position_dict: dict
+    graphD: nx.DiGraph | nx.Graph,
+    normalized_data: np.ndarray,
+    node_sizes: List[float],
+    position_dict: dict,
 ) -> None:
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(1, 1, 1)
-    if data is None:
+    if normalized_data is None:
         nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
     else:
-        mean_data = sum(data) / len(data)
-        node_sizes = [20 * float(signal / mean_data) for signal in data]
         nx.draw_networkx_nodes(
             G=graphD,
             pos=position_dict,
-            node_color=data,
+            node_color=normalized_data,
             cmap="turbo",
             node_size=node_sizes,
         )
         sm = plt.cm.ScalarMappable(
-            cmap="turbo", norm=plt.Normalize(vmin=min(data), vmax=max(data))
+            cmap="turbo",
+            norm=plt.Normalize(vmin=min(normalized_data), vmax=max(normalized_data)),
         )
-        sm.set_array([0, max(data)])
+        sm.set_array([0, max(normalized_data)])
         plt.colorbar(sm, ax=ax)
     nx.draw_networkx_edges(G=graphD, pos=position_dict, width=0.2)
     st.pyplot(fig=fig, use_container_width=True)
@@ -118,3 +130,9 @@ def show_spectrum(hat_signal: np.ndarray):
     signal_index = [i for i in range(len(hat_signal))]
     ax.stem(signal_index, np.abs(hat_signal))
     st.pyplot(fig=fig, use_container_width=True)
+
+
+def normalize_graph_signal(graph_signal: np.ndarray, axis: int = 0):
+    mean_gs = np.mean(graph_signal, axis=axis, keepdims=True)
+    std_gs = np.std(graph_signal, axis=axis, keepdims=True)
+    return (graph_signal - mean_gs) / std_gs
