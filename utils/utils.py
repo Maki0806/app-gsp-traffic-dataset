@@ -6,6 +6,7 @@ from typing import List, Type
 from scipy.sparse import find
 import networkx as nx
 import matplotlib.pyplot as plt
+from pygsp import filters
 
 
 def top_dir() -> Path:
@@ -146,3 +147,24 @@ def normalize_graph_signal(graph_signal: np.ndarray, axis: int = 0):
     mean_gs = np.mean(graph_signal, axis=axis, keepdims=True)
     std_gs = np.std(graph_signal, axis=axis, keepdims=True)
     return (graph_signal - mean_gs) / std_gs
+
+
+def gsp_design_smooth_indicator(G, a1, a2):
+    G.compute_fourier_basis()
+    lmax = G.lmax
+    fx = lambda x, a: np.exp(-a / x) * (x >= 0)
+    gx = lambda x, a: fx(x, a) / (fx(x, a) + fx(1 - x, a))
+    ffin = lambda x, a1, a2: np.where(
+        x >= a1, gx(1 - (x - a1) / (a2 - a1), 1), np.where(x >= 0, 1, 0)
+    )
+    g = lambda x: ffin(x / lmax, a1, a2)
+    return filters.Filter(G, g)
+
+
+def st_show_filter(g, fig_title: str = None):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    g.plot(plot_eigenvalues=True, ax=ax)
+    ax.set_title(fig_title)
+    fig.tight_layout()
+    st.pyplot(fig=fig, use_container_width=True)
