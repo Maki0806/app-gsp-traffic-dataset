@@ -46,18 +46,27 @@ def draw_graph_signals(
     G: any,
     pos: np.ndarray,
     data: np.ndarray = None,
-    normalized_data: np.array = None,
-    save_image_name: str = None,
+    normalized_data: np.ndarray = None,
 ):
     position_dict = {
         node_num: (pos_x, pos_y) for node_num, (pos_x, pos_y) in enumerate(pos)
     }
-    if normalized_data is None:
+    node_value_disabled = _check_node_value_disabled(data, normalized_data)
+    if not node_value_disabled and normalized_data is None:
         normalized_data = data
     node_sizes = _make_node_size(data)
     edges = _make_edge(G)
     graphD = _make_graphD(G=G, edges=edges)
-    _st_graph_pyplot(graphD, normalized_data, node_sizes, position_dict)
+    _st_graph_pyplot(
+        graphD, normalized_data, node_sizes, position_dict, node_value_disabled
+    )
+
+
+def _check_node_value_disabled(data, normalized_data) -> bool:
+    node_value_disabled = data is None and normalized_data is None
+    if data is None and normalized_data is not None:
+        raise Exception("Please input `data` into draw_graph to show the node values.")
+    return node_value_disabled
 
 
 def _make_edge(G) -> List:
@@ -87,14 +96,16 @@ def _st_graph_pyplot(
     normalized_data: np.ndarray,
     node_sizes: List[float],
     position_dict: dict,
+    node_value_disabled: bool,
 ) -> None:
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(1, 1, 1)
-    if normalized_data is None:
+    if node_value_disabled:
         nx.draw_networkx_nodes(G=graphD, pos=position_dict, node_size=10)
     else:
         nx.draw_networkx_nodes(
             G=graphD,
+            nodelist=np.arange(len(position_dict)),
             pos=position_dict,
             node_color=normalized_data,
             cmap="turbo",
@@ -111,10 +122,9 @@ def _st_graph_pyplot(
 
 
 def show_empty_fig():
-    zero_array = np.zeros((100, 2))
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(1, 1, 1)
-    ax.scatter(x=zero_array[:, 0], y=zero_array[:, 1])
+    ax.scatter(x=[], y=[])
     st.pyplot(fig=fig, use_container_width=True)
 
 
