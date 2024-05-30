@@ -9,6 +9,8 @@ from .utils import (
     apply_gft_to_signal,
     show_spectrum,
     normalize_graph_signal,
+    gsp_design_smooth_indicator,
+    st_show_filter,
 )
 from .gs_variables import GraphVariables
 from .session_state_variables import SessionVariables
