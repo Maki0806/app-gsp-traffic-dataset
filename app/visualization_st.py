@@ -59,8 +59,13 @@ class AppVisGSP:
             slider_disabled=slider_disabled, max_value=self._max_time
         )
         noise_std = self._select_noise_std(slider_disabled=slider_disabled)
+        change_noise_signal = st.button(
+            "Change noise signals", disabled=slider_disabled
+        )
         if not slider_disabled:
-            self._make_noise_signal(noise_std=noise_std)
+            self._make_noise_signal(
+                noise_std=noise_std, change_noise_signal=change_noise_signal
+            )
 
         gs_draw_col, gs_spectrum_draw_col = st.columns(2)
         with gs_draw_col:
@@ -130,9 +135,15 @@ class AppVisGSP:
     def _make_noise_signal(
         self,
         noise_std,
+        change_noise_signal,
     ):
-        noise_size = self._gs_variables.normalized_data.shape[0]
-        self._noise_signal = np.random.normal(loc=0, scale=noise_std, size=noise_size)
+        if variables._standard_normal_dist is None or change_noise_signal:
+            noise_size = self._gs_variables.normalized_data.shape[0]
+            _standard_normal_dist = np.random.normal(loc=0, scale=1, size=noise_size)
+            variables._standard_normal_dist = _standard_normal_dist
+            self._noise_signal = (noise_std**2) * _standard_normal_dist
+        else:
+            self._noise_signal = (noise_std**2) * variables._standard_normal_dist
 
     def _gs_draw_col_function(self, gs_variables, selected_time):
         if gs_variables is not None and selected_time is not None:
