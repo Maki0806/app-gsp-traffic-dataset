@@ -33,3 +33,11 @@ class SessionVariables:
     @gs_variables.setter
     def gs_variables(self, value):
         _set_session_state(value)
+
+    @property
+    def _standard_normal_dist(self):
+        return _get_session_state()
+
+    @_standard_normal_dist.setter
+    def _standard_normal_dist(self, value):
+        _set_session_state(value)
